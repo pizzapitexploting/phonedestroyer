@@ -3,67 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memory Intensive HTML</title>
+    <title>Maximum Memory Consumption</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
+            margin: 0;
             background-color: black;
             color: white;
-            margin: 0;
+            font-family: Arial, sans-serif;
         }
-
-        .box {
+        #videoContainer, #boxContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        video {
             width: 200px;
             height: 200px;
+            margin: 2px;
+        }
+        .box {
+            width: 50px;
+            height: 50px;
+            margin: 1px;
             background: linear-gradient(45deg, red, yellow, green, cyan, blue, magenta);
-            margin: 10px;
-            display: inline-block;
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from {
+                transform: scale(1);
+            }
+            to {
+                transform: scale(1.5);
+            }
+        }
+        h1 {
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <h1>Resource Intensive Page</h1>
-    <p>This page is designed to consume a lot of memory. Open your browser's task manager to monitor its effect!</p>
-    <div id="container"></div>
+    <h1>Crashing Your Memory</h1>
+    <p id="status">Loading...</p>
+    <div id="videoContainer"></div>
+    <div id="boxContainer"></div>
 
     <script>
-        // Generate a massive array to occupy memory
-        let largeArray = [];
-        try {
-            for (let i = 0; i < 50_000_000; i++) {
-                largeArray.push(Math.random().toString(36).repeat(10)); // Add strings of random characters
-                if (i % 1_000_000 === 0) console.log(`Array size: ${i}`);
+        const videoContainer = document.getElementById("videoContainer");
+        const boxContainer = document.getElementById("boxContainer");
+        const status = document.getElementById("status");
+
+        let totalVideos = 0;
+        let totalBoxes = 0;
+        let memoryHog = [];
+
+        function addVideos(count) {
+            for (let i = 0; i < count; i++) {
+                const video = document.createElement("video");
+                video.src = "albuquerque.mp4";
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = true;
+                videoContainer.appendChild(video);
+                totalVideos++;
             }
-        } catch (e) {
-            console.error("Array generation stopped due to memory limit.", e);
         }
 
-        // Dynamically create DOM elements to occupy more memory
-        const container = document.getElementById("container");
-        try {
-            for (let i = 0; i < 100_000; i++) {
+        function addBoxes(count) {
+            for (let i = 0; i < count; i++) {
                 const box = document.createElement("div");
                 box.className = "box";
-                container.appendChild(box);
-                if (i % 1000 === 0) console.log(`Created ${i} DOM elements.`);
+                boxContainer.appendChild(box);
+                totalBoxes++;
             }
-        } catch (e) {
-            console.error("DOM element creation stopped due to memory limit.", e);
         }
 
-        // Add memory-heavy data to the window object
-        try {
-            window.memoryHog = {};
-            for (let i = 0; i < 100_000; i++) {
-                window.memoryHog[`key_${i}`] = "X".repeat(1_000_000); // 1MB strings
-                if (i % 1000 === 0) console.log(`Added ${i} keys to memoryHog.`);
+        function fillMemory(count) {
+            for (let i = 0; i < count; i++) {
+                memoryHog.push("X".repeat(1_000_000)); // 1MB string
             }
-        } catch (e) {
-            console.error("Window object population stopped due to memory limit.", e);
         }
 
-        console.log("Memory-intensive script finished.");
+        function loadMore() {
+            try {
+                // Add 500 videos
+                addVideos(500);
+
+                // Add 10,000 animated boxes
+                addBoxes(10_000);
+
+                // Inflate memory
+                fillMemory(100);
+
+                // Update status
+                status.textContent = `Videos: ${totalVideos}, Boxes: ${totalBoxes}, Memory Chunks: ${memoryHog.length}`;
+
+                // Continue until the browser limits are hit
+                requestAnimationFrame(loadMore);
+            } catch (e) {
+                status.textContent = `Memory overload reached! Videos: ${totalVideos}, Boxes: ${totalBoxes}, Memory Chunks: ${memoryHog.length}`;
+                console.error("Memory overload!", e);
+            }
+        }
+
+        loadMore();
     </script>
 </body>
 </html>
